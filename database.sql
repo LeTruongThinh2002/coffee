@@ -48,8 +48,8 @@ CREATE PROCEDURE `GetAllLocation` ()   BEGIN
     ON w.district_id = d.district_id;
 END
 
-CREATE PROCEDURE `GetCategoryById` (IN `categoryId` INT)   BEGIN
-    SELECT * FROM Category WHERE CategoryId = categoryId LIMIT 1;
+CREATE PROCEDURE `GetCategoryById` (IN `pcategoryId` INT)   BEGIN
+    SELECT * FROM Category WHERE CategoryId = pcategoryId;
 END
 
 CREATE PROCEDURE `GetChartDay` (IN `pCat` VARCHAR(32), IN `pDay` CHAR(4), IN `pMonth` CHAR(4), IN `pYear` CHAR(4))   BEGIN
@@ -80,16 +80,16 @@ CREATE PROCEDURE `GetChartDayProduct` (IN `pPro` VARCHAR(32), IN `pDay` CHAR(4),
     SELECT 
     	pPro as Name,
         CONCAT(pDay, "-" ,pMonth, "-" ,pYear) as Ngay,
-        COALESCE(SUM(Invoicedetail.Amount), 0) as TongSL, 
-        COALESCE(SUM(Invoicedetail.TotalPrice), 0) as TongDT  
+        COALESCE(SUM(InvoiceDetail.Amount), 0) as TongSL, 
+        COALESCE(SUM(InvoiceDetail.TotalPrice), 0) as TongDT  
     FROM
         Invoice
     LEFT JOIN 
-        Invoicedetail ON Invoicedetail.InvoiceId = Invoice.InvoiceId
+        InvoiceDetail ON InvoiceDetail.InvoiceId = Invoice.InvoiceId
     LEFT JOIN 
-        product ON product.ProductId = Invoicedetail.ProductId
+        Product ON product.ProductId = InvoiceDetail .ProductId
     WHERE 
-        product.ProductName = pPro AND DAY(Invoice.created_at) = pDay AND MONTH(Invoice.created_at) = pMonth AND YEAR(Invoice.created_at) = pYear;
+        Product.ProductName = pPro AND DAY(Invoice.created_at) = pDay AND MONTH(Invoice.created_at) = pMonth AND YEAR(Invoice.created_at) = pYear;
 END
 
 CREATE PROCEDURE `GetChartMonth` (IN `pCat` VARCHAR(32), IN `pMonth` CHAR(4), IN `pYear` CHAR(4))   BEGIN
@@ -305,7 +305,7 @@ CREATE PROCEDURE `InsertIntoInvoice` (IN `pInvoiceId` INT, IN `pUserId` BIGINT, 
     VALUES (pInvoiceId, pUserId, pProvinceId, pDistrictId, pWardId, pPhone, pAddress, pcreated_at);
 END
 
-CREATE PROCEDURE `InsertMessage` (IN `p_UserId` BIGINT, IN `p_content` VARCHAR(256))   BEGIN
+CREATE PROCEDURE `InsertMessage` (IN `p_UserId` BIGINT, IN `p_content` VARCHAR(8000))   BEGIN
      INSERT INTO Message(member_id,content)
      VALUES (p_UserId, p_content);
 END
@@ -359,7 +359,7 @@ END
 
 CREATE PROCEDURE `UpdateRoleUser` (IN `pId` BIGINT, IN `pRole` BIGINT)   BEGIN
     UPDATE User
-    SET Role = pRole
+    SET role = pRole
     WHERE id = pId;
 END
 
