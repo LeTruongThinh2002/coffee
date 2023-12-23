@@ -41,10 +41,10 @@ END
 
 CREATE PROCEDURE `GetAllLocation` ()   BEGIN
     SELECT p.province_id, p.name as province_name, d.district_id, d.name as district_name, w.wards_id, w.name as wards_name
-    FROM province p
-    INNER JOIN district d
+    FROM Province p
+    INNER JOIN District d
     ON d.province_id = p.province_id
-    INNER JOIN wards w
+    INNER JOIN Wards w
     ON w.district_id = d.district_id;
 END
 
@@ -57,23 +57,23 @@ CREATE PROCEDURE `GetChartDay` (IN `pCat` VARCHAR(32), IN `pDay` CHAR(4), IN `pM
     	pCat as Name,
         CONCAT(pDay, "-" ,pMonth, "-" ,pYear) as Ngay,
         CASE
-            WHEN category.CategoryName IS NULL THEN 0
-            ELSE COALESCE(SUM(Invoicedetail.Amount), 0)
+            WHEN Category.CategoryName IS NULL THEN 0
+            ELSE COALESCE(SUM(InvoiceDetail.Amount), 0)
         END as TongSL, 
         CASE
-            WHEN category.CategoryName IS NULL THEN 0
-            ELSE COALESCE(SUM(Invoicedetail.TotalPrice), 0)
+            WHEN Category.CategoryName IS NULL THEN 0
+            ELSE COALESCE(SUM(InvoiceDetail.TotalPrice), 0)
         END as TongDT  
     FROM
         Invoice
     LEFT JOIN 
-        Invoicedetail ON Invoicedetail.InvoiceId = Invoice.InvoiceId
+        InvoiceDetail ON InvoiceDetail.InvoiceId = Invoice.InvoiceId
     LEFT JOIN 
-        product ON product.ProductId = Invoicedetail.ProductId
+        Product ON Product.ProductId = InvoiceDetail.ProductId
     LEFT JOIN 
-        category ON product.CategoryId = category.CategoryId
+        Category ON Product.CategoryId = Category.CategoryId
     WHERE 
-        (category.CategoryName = pCat OR category.CategoryName IS NULL) AND DAY(Invoice.created_at) = pDay AND MONTH(Invoice.created_at) = pMonth AND YEAR(Invoice.created_at) = pYear;
+        (Category.CategoryName = pCat OR Category.CategoryName IS NULL) AND DAY(Invoice.created_at) = pDay AND MONTH(Invoice.created_at) = pMonth AND YEAR(Invoice.created_at) = pYear;
 END
 
 CREATE PROCEDURE `GetChartDayProduct` (IN `pPro` VARCHAR(32), IN `pDay` CHAR(4), IN `pMonth` CHAR(4), IN `pYear` CHAR(4))   BEGIN
@@ -87,7 +87,7 @@ CREATE PROCEDURE `GetChartDayProduct` (IN `pPro` VARCHAR(32), IN `pDay` CHAR(4),
     LEFT JOIN 
         InvoiceDetail ON InvoiceDetail.InvoiceId = Invoice.InvoiceId
     LEFT JOIN 
-        Product ON product.ProductId = InvoiceDetail .ProductId
+        Product ON Product.ProductId = InvoiceDetail .ProductId
     WHERE 
         Product.ProductName = pPro AND DAY(Invoice.created_at) = pDay AND MONTH(Invoice.created_at) = pMonth AND YEAR(Invoice.created_at) = pYear;
 END
@@ -200,16 +200,19 @@ CREATE PROCEDURE `GetChartYearProduct` (IN `pPro` VARCHAR(32), IN `pYear` CHAR(4
         Product.ProductName = pPro AND YEAR(Invoice.created_at) = pYear;
 END
 
-CREATE PROCEDURE `GetDayInvoices` (IN `pDay` VARCHAR(64), IN `pOrder` CHAR(4))   BEGIN SET @query = CONCAT('SELECT Invoice.InvoiceId, Invoice.UserId, Invoice.Phone, Invoice.WardId, DATE(Invoice.created_at) as date, TIME(Invoice.created_at) as time, Invoice.Address, user.name AS UserName, user.email AS Email FROM Invoice JOIN user ON Invoice.UserId = user.id WHERE DATE(Invoice.created_at) = "', pDay,'" ORDER BY UserName ', pOrder); PREPARE stmt FROM @query; EXECUTE stmt; DEALLOCATE PREPARE stmt; END
+CREATE PROCEDURE `GetDayInvoices` (IN `pDay` VARCHAR(64), IN `pOrder` CHAR(4))   
+BEGIN 
+SET @query = CONCAT('SELECT Invoice.InvoiceId, Invoice.UserId, Invoice.Phone, Invoice.WardId, DATE(Invoice.created_at) as date, TIME(Invoice.created_at) as time, Invoice.Address, User.name AS UserName, User.email AS Email FROM Invoice JOIN user ON Invoice.UserId = User.id WHERE DATE(Invoice.created_at) = "', pDay,'" ORDER BY UserName ', pOrder); PREPARE stmt FROM @query; EXECUTE stmt; DEALLOCATE PREPARE stmt; 
+END
 
 CREATE PROCEDURE `GetImage` (IN `inputImageUrl` VARCHAR(124))   BEGIN
     SELECT ImageUrl FROM Category WHERE ImageUrl = inputImageUrl;
 END
 
 CREATE PROCEDURE `GetInvoiceAll` (IN `pOrder` CHAR(4))   BEGIN
-    SET @query = CONCAT('SELECT Invoice.InvoiceId, Invoice.UserId, Invoice.Phone, Invoice.WardId, Invoice.created_at, Invoice.Address, user.name AS UserName, user.email AS Email
+    SET @query = CONCAT('SELECT Invoice.InvoiceId, Invoice.UserId, Invoice.Phone, Invoice.WardId, Invoice.created_at, Invoice.Address, User.name AS UserName, User.email AS Email
     FROM Invoice
-    JOIN user ON Invoice.UserId = user.id ORDER BY UserName ', pOrder);
+    JOIN User ON Invoice.UserId = User.id ORDER BY UserName ', pOrder);
     PREPARE stmt FROM @query;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
@@ -408,7 +411,7 @@ DELIMITER ;
 --
 
 DROP TABLE IF EXISTS `cart`;
-CREATE TABLE IF NOT EXISTS `cart` (
+CREATE TABLE IF NOT EXISTS `Cart` (
   `UserId` bigint NOT NULL,
   `ProductId` int NOT NULL,
   `Size` char(2) NOT NULL,
@@ -420,7 +423,7 @@ CREATE TABLE IF NOT EXISTS `cart` (
 -- Đang đổ dữ liệu cho bảng `cart`
 --
 
-INSERT INTO `cart` (`UserId`, `ProductId`, `Size`, `Amount`) VALUES
+INSERT INTO `Cart` (`UserId`, `ProductId`, `Size`, `Amount`) VALUES
 (776520031, 102978195, 'L', 1),
 (776520031, 102978195, 'S', 1),
 (3679829931543033753, 102948743, 'S', 2);
@@ -432,7 +435,7 @@ INSERT INTO `cart` (`UserId`, `ProductId`, `Size`, `Amount`) VALUES
 --
 
 DROP TABLE IF EXISTS `category`;
-CREATE TABLE IF NOT EXISTS `category` (
+CREATE TABLE IF NOT EXISTS `Category` (
   `CategoryId` tinyint NOT NULL AUTO_INCREMENT,
   `CategoryName` varchar(32) NOT NULL,
   `Description` varchar(8000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -444,7 +447,7 @@ CREATE TABLE IF NOT EXISTS `category` (
 -- Đang đổ dữ liệu cho bảng `category`
 --
 
-INSERT INTO `category` (`CategoryId`, `CategoryName`, `Description`, `ImageUrl`) VALUES
+INSERT INTO `Category` (`CategoryId`, `CategoryName`, `Description`, `ImageUrl`) VALUES
 (2, 'Cà phê', 'Sự kết hợp hoàn hảo giữa hạt cà phê Robusta & Arabica thượng hạng được trồng trên những vùng cao nguyên Việt Nam màu mỡ, qua những bí quyết rang xay độc đáo, Highlands Coffee chúng tôi tự hào giới thiệu những dòng sản phẩm Cà phê mang hương vị đậm đà và tinh tế.', 'CaPhe.jpg'),
 (3, 'Freeze', 'Sảng khoái với thức uống đá xay phong cách Việt. Freeze là thức uống đá xay mát lạnh được pha chế từ những nguyên liệu thuần túy của Việt Nam.', 'Freeze.jpg'),
 (1, 'Trà', 'Hương vị tự nhiên, thơm ngon của Trà Việt với phong cách hiện đại tại Highlands Coffee sẽ giúp bạn gợi mở vị giác của bản thân và tận hưởng một cảm giác thật khoan khoái, tươi mới.', 'Tra.jpg');
@@ -455,8 +458,8 @@ INSERT INTO `category` (`CategoryId`, `CategoryName`, `Description`, `ImageUrl`)
 -- Cấu trúc bảng cho bảng `district`
 --
 
-DROP TABLE IF EXISTS `district`;
-CREATE TABLE IF NOT EXISTS `district` (
+DROP TABLE IF EXISTS `District`;
+CREATE TABLE IF NOT EXISTS `District` (
   `district_id` int NOT NULL AUTO_INCREMENT,
   `province_id` int NOT NULL,
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -467,7 +470,7 @@ CREATE TABLE IF NOT EXISTS `district` (
 -- Đang đổ dữ liệu cho bảng `district`
 --
 
-INSERT INTO `district` (`district_id`, `province_id`, `name`) VALUES
+INSERT INTO `District` (`district_id`, `province_id`, `name`) VALUES
 (1, 1, 'Quận Ba Đình'),
 (2, 1, 'Quận Hoàn Kiếm'),
 (3, 1, 'Quận Tây Hồ'),
@@ -1180,7 +1183,6 @@ INSERT INTO `district` (`district_id`, `province_id`, `name`) VALUES
 -- Cấu trúc bảng cho bảng `Invoice`
 --
 
-DROP TABLE IF EXISTS `Invoice`;
 CREATE TABLE IF NOT EXISTS `Invoice` (
   `InvoiceId` int NOT NULL,
   `UserId` bigint NOT NULL,
@@ -1237,8 +1239,7 @@ INSERT INTO `Invoice` (`InvoiceId`, `UserId`, `ProvinceId`, `DistrictId`, `WardI
 -- Cấu trúc bảng cho bảng `Invoicedetail`
 --
 
-DROP TABLE IF EXISTS `Invoicedetail`;
-CREATE TABLE IF NOT EXISTS `Invoicedetail` (
+CREATE TABLE IF NOT EXISTS `InvoiceDetail` (
   `InvoiceId` int NOT NULL,
   `ProductId` int NOT NULL,
   `Price` int NOT NULL,
@@ -1251,7 +1252,7 @@ CREATE TABLE IF NOT EXISTS `Invoicedetail` (
 -- Đang đổ dữ liệu cho bảng `Invoicedetail`
 --
 
-INSERT INTO `Invoicedetail` (`InvoiceId`, `ProductId`, `Price`, `Size`, `Amount`, `TotalPrice`) VALUES
+INSERT INTO `InvoiceDetail` (`InvoiceId`, `ProductId`, `Price`, `Size`, `Amount`, `TotalPrice`) VALUES
 (249355, 100330905, 55000, 'M', 1, 55000),
 (249355, 100330905, 45000, 'S', 2, 90000),
 (249355, 100354430, 150000, 'XL', 1, 150000),
@@ -1325,8 +1326,8 @@ INSERT INTO `Invoicedetail` (`InvoiceId`, `ProductId`, `Price`, `Size`, `Amount`
 -- Cấu trúc bảng cho bảng `message`
 --
 
-DROP TABLE IF EXISTS `message`;
-CREATE TABLE IF NOT EXISTS `message` (
+DROP TABLE IF EXISTS `Message`;
+CREATE TABLE IF NOT EXISTS `Message` (
   `id` int NOT NULL AUTO_INCREMENT,
   `member_id` bigint NOT NULL,
   `content` varchar(256) NOT NULL,
@@ -1340,7 +1341,7 @@ CREATE TABLE IF NOT EXISTS `message` (
 -- Đang đổ dữ liệu cho bảng `message`
 --
 
-INSERT INTO `message` (`id`, `member_id`, `content`, `created_at`, `updated_at`, `active`) VALUES
+INSERT INTO `Message` (`id`, `member_id`, `content`, `created_at`, `updated_at`, `active`) VALUES
 (1, 877141292, 'adw', '2023-10-28 09:49:49', '2023-10-28 09:49:49', 0),
 (2, 2907738840234170998, 'Đăng nhập mới thành công', '2023-11-21 20:42:25', '2023-11-21 20:42:25', 1),
 (3, 2907738840234170998, 'Đăng nhập mới thành công', '2023-11-21 20:42:36', '2023-11-21 20:42:36', 1),
@@ -1364,29 +1365,6 @@ INSERT INTO `message` (`id`, `member_id`, `content`, `created_at`, `updated_at`,
 -- Cấu trúc bảng cho bảng `messageview`
 --
 
-DROP TABLE IF EXISTS `messageview`;
-CREATE TABLE IF NOT EXISTS `messageview` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `message_id` int NOT NULL,
-  `member_id` bigint NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Cấu trúc bảng cho bảng `migrations`
---
-
-DROP TABLE IF EXISTS `migrations`;
-CREATE TABLE IF NOT EXISTS `migrations` (
-  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `batch` int NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1394,8 +1372,8 @@ CREATE TABLE IF NOT EXISTS `migrations` (
 -- Cấu trúc bảng cho bảng `product`
 --
 
-DROP TABLE IF EXISTS `product`;
-CREATE TABLE IF NOT EXISTS `product` (
+DROP TABLE IF EXISTS `Product`;
+CREATE TABLE IF NOT EXISTS `Product` (
   `ProductId` int NOT NULL,
   `CategoryId` tinyint NOT NULL,
   `ProductName` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
@@ -1408,7 +1386,7 @@ CREATE TABLE IF NOT EXISTS `product` (
 -- Đang đổ dữ liệu cho bảng `product`
 --
 
-INSERT INTO `product` (`ProductId`, `CategoryId`, `ProductName`, `Description`, `ImageUrl`) VALUES
+INSERT INTO `Product` (`ProductId`, `CategoryId`, `ProductName`, `Description`, `ImageUrl`) VALUES
 (105870050, 1, 'Trà Thạch Vải', '&lt;strong&gt;Một sự kết hợp th&amp;uacute; vị giữa tr&amp;agrave; đen, những quả vải thơm ngon v&amp;agrave; thạch gi&amp;ograve;n kh&amp;oacute; cưỡng, mang đến thức uống tuyệt hảo!&lt;/strong&gt;', 'TraThachVai.jpg'),
 (102263546, 1, 'Trà Sen Vàng (Sen)', '&lt;strong&gt;&lt;span style=\"text-decoration:underline;\"&gt;Tr&amp;agrave; bỏ phẩm m&amp;agrave;u v&amp;agrave;ng, tốt cho sức khỏe!&lt;/span&gt;&lt;/strong&gt;', 'TraSenVang.jpg'),
 (100330905, 1, 'Trà Thạch Đào', 'Vị trà đậm đà kết hợp cùng những miếng đào thơm ngon mọng nước cùng thạch đào giòn dai. Thêm vào ít sữa để gia tăng vị béo.', 'TraThachDao.jpg'),
@@ -1432,8 +1410,8 @@ INSERT INTO `product` (`ProductId`, `CategoryId`, `ProductName`, `Description`, 
 -- Cấu trúc bảng cho bảng `productprice`
 --
 
-DROP TABLE IF EXISTS `productprice`;
-CREATE TABLE IF NOT EXISTS `productprice` (
+DROP TABLE IF EXISTS `Productprice`;
+CREATE TABLE IF NOT EXISTS `ProductPrice` (
   `ProductId` int NOT NULL,
   `Size` char(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Price` int NOT NULL
@@ -1443,7 +1421,7 @@ CREATE TABLE IF NOT EXISTS `productprice` (
 -- Đang đổ dữ liệu cho bảng `productprice`
 --
 
-INSERT INTO `productprice` (`ProductId`, `Size`, `Price`) VALUES
+INSERT INTO `ProductPrice` (`ProductId`, `Size`, `Price`) VALUES
 (100330905, 'S', 45000),
 (100330905, 'M', 55000),
 (100330905, 'L', 65000),
@@ -1503,8 +1481,8 @@ INSERT INTO `productprice` (`ProductId`, `Size`, `Price`) VALUES
 -- Cấu trúc bảng cho bảng `profileimage`
 --
 
-DROP TABLE IF EXISTS `profileimage`;
-CREATE TABLE IF NOT EXISTS `profileimage` (
+DROP TABLE IF EXISTS `ProfileImage`;
+CREATE TABLE IF NOT EXISTS `ProfileImage` (
   `UserId` bigint NOT NULL,
   `ImageUrl` varchar(124) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`UserId`)
@@ -1514,7 +1492,7 @@ CREATE TABLE IF NOT EXISTS `profileimage` (
 -- Đang đổ dữ liệu cho bảng `profileimage`
 --
 
-INSERT INTO `profileimage` (`UserId`, `ImageUrl`) VALUES
+INSERT INTO `ProfileImage` (`UserId`, `ImageUrl`) VALUES
 (776520031, 'vegeta.jpg'),
 (877141292, 'da.jpg'),
 (1996407536123408025, 'kem.jpg'),
@@ -1527,8 +1505,8 @@ INSERT INTO `profileimage` (`UserId`, `ImageUrl`) VALUES
 -- Cấu trúc bảng cho bảng `province`
 --
 
-DROP TABLE IF EXISTS `province`;
-CREATE TABLE IF NOT EXISTS `province` (
+DROP TABLE IF EXISTS `Province`;
+CREATE TABLE IF NOT EXISTS `Province` (
   `province_id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`province_id`)
@@ -1538,7 +1516,7 @@ CREATE TABLE IF NOT EXISTS `province` (
 -- Đang đổ dữ liệu cho bảng `province`
 --
 
-INSERT INTO `province` (`province_id`, `name`) VALUES
+INSERT INTO `Province` (`province_id`, `name`) VALUES
 (1, ' Hà Nội'),
 (2, ' Hà Giang'),
 (3, ' Cao Bằng'),
@@ -1609,8 +1587,8 @@ INSERT INTO `province` (`province_id`, `name`) VALUES
 -- Cấu trúc bảng cho bảng `role`
 --
 
-DROP TABLE IF EXISTS `role`;
-CREATE TABLE IF NOT EXISTS `role` (
+DROP TABLE IF EXISTS `Role`;
+CREATE TABLE IF NOT EXISTS `Role` (
   `RoleId` bigint NOT NULL AUTO_INCREMENT,
   `RoleName` char(12) NOT NULL,
   `updated_at` datetime NOT NULL,
@@ -1622,7 +1600,7 @@ CREATE TABLE IF NOT EXISTS `role` (
 -- Đang đổ dữ liệu cho bảng `role`
 --
 
-INSERT INTO `role` (`RoleId`, `RoleName`, `updated_at`, `created_at`) VALUES
+INSERT INTO `Role` (`RoleId`, `RoleName`, `updated_at`, `created_at`) VALUES
 (1, 'admin', '2023-09-29 20:07:03', '2023-09-29 20:07:03'),
 (2, 'user', '2023-09-29 20:07:08', '2023-09-29 20:07:08'),
 (29, 'member', '2023-10-13 10:21:47', '2023-10-06 20:00:22'),
@@ -1635,8 +1613,8 @@ INSERT INTO `role` (`RoleId`, `RoleName`, `updated_at`, `created_at`) VALUES
 -- Cấu trúc bảng cho bảng `size`
 --
 
-DROP TABLE IF EXISTS `size`;
-CREATE TABLE IF NOT EXISTS `size` (
+DROP TABLE IF EXISTS `Size`;
+CREATE TABLE IF NOT EXISTS `Size` (
   `SizeId` bigint NOT NULL AUTO_INCREMENT,
   `SizeName` char(12) NOT NULL,
   PRIMARY KEY (`SizeId`)
@@ -1646,7 +1624,7 @@ CREATE TABLE IF NOT EXISTS `size` (
 -- Đang đổ dữ liệu cho bảng `size`
 --
 
-INSERT INTO `size` (`SizeId`, `SizeName`) VALUES
+INSERT INTO `Size` (`SizeId`, `SizeName`) VALUES
 (1, 'M'),
 (2, 'S'),
 (3, 'L'),
@@ -1659,8 +1637,8 @@ INSERT INTO `size` (`SizeId`, `SizeName`) VALUES
 -- Cấu trúc bảng cho bảng `user`
 --
 
-DROP TABLE IF EXISTS `user`;
-CREATE TABLE IF NOT EXISTS `user` (
+DROP TABLE IF EXISTS `User`;
+CREATE TABLE IF NOT EXISTS `User` (
   `id` bigint NOT NULL,
   `name` varchar(64) NOT NULL,
   `email` varchar(64) NOT NULL,
@@ -1678,7 +1656,7 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- Đang đổ dữ liệu cho bảng `user`
 --
 
-INSERT INTO `user` (`id`, `name`, `email`, `password`, `role`, `updated_at`, `created_at`, `remember_token`, `email_verify_at`) VALUES
+INSERT INTO `User` (`id`, `name`, `email`, `password`, `role`, `updated_at`, `created_at`, `remember_token`, `email_verify_at`) VALUES
 (776520031, 'thinh le2222', 'thinhofdakh00@gmail.com', '$2y$10$1jZHyKbyLwTL6dP/tqd4uuOYMFMulkmLHN357B5lIQO1WLgIy8xCW', 2, '2023-11-09 19:45:53', '2023-10-12 08:24:18', 'pEcckmHtobDvhVrotqP9of88MOkkRACQU8DGBmIiOM7NnqYOg1DoN3rhM7qGhnUM', '2023-11-04 08:28:38'),
 (877141292, 'Trường Lê', 'thinhofdakh000@gmail.com', '$2y$10$fHMs17IzhsmryjYKAnIbfeOYzOqA3WU9.nkqMKGl4DUdSDJbjRHm2', 2, '2023-11-09 19:45:50', '2023-10-12 08:22:31', NULL, NULL),
 (21804916271436591, 'Trường Lê', 'thinhofdakkkih@gmail.com', '$2y$10$kEB2MC252AR8u6omhieSIOORtmN5FWV4/EOY.pxBhWOzoIZUJza5e', 2, '2023-11-23 08:49:16', '2023-11-23 08:49:16', NULL, NULL),
@@ -1699,8 +1677,8 @@ INSERT INTO `user` (`id`, `name`, `email`, `password`, `role`, `updated_at`, `cr
 -- Cấu trúc bảng cho bảng `wards`
 --
 
-DROP TABLE IF EXISTS `wards`;
-CREATE TABLE IF NOT EXISTS `wards` (
+DROP TABLE IF EXISTS `Wards`;
+CREATE TABLE IF NOT EXISTS `Wards` (
   `wards_id` int NOT NULL AUTO_INCREMENT,
   `district_id` int NOT NULL,
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -1711,7 +1689,7 @@ CREATE TABLE IF NOT EXISTS `wards` (
 -- Đang đổ dữ liệu cho bảng `wards`
 --
 
-INSERT INTO `wards` (`wards_id`, `district_id`, `name`) VALUES
+INSERT INTO `Wards` (`wards_id`, `district_id`, `name`) VALUES
 (1, 1, 'Phường Phúc Xá'),
 (2, 1, 'Phường Trúc Bạch'),
 (3, 1, 'Phường Vĩnh Phúc'),
@@ -12301,5 +12279,5 @@ INSERT INTO `wards` (`wards_id`, `district_id`, `name`) VALUES
 (10582, 705, 'Thị trấn Rạch Gốc'),
 (10583, 705, 'Xã Tân Ân'),
 (10584, 705, 'Xã Đất Mũi');
-COMMIT;
+
 
