@@ -7,8 +7,11 @@ Please register real email for sendmail:
 - active account after login
 - complete order
 - forgot password 
-Please changes role account by 1 for view 
-and using admin management in website, include:
+User functions: 
+- Register, login, logout, forgot password, verify, change password, email, profile picture.
+- Add products to cart, edit cart, place an order, look up invoices.
+- Get real-time notifications when an order is successful, log in, change email...
+Admin management in website, include:
 - Role and Category: add, edit, delete.
 - User: search, delete, changes role.
 - Product: add, edit, delete, search.
